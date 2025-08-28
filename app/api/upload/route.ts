@@ -1,35 +1,22 @@
-import { IncomingForm } from "formidable";
-import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { NextRequest } from "next/server"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getCommandObject, r2Client } from "@/lib/uploadClient";
 
-export async function POST(req: NextRequest) {
+    export async function GET(req:NextRequest)  {
+        try{    
+        const fileName = req.nextUrl.searchParams.get("fileName") as string  ;
+        const filetype = req.nextUrl.searchParams.get("filetype") as string  ;
+            const url = await getSignedUrl(r2Client,getCommandObject(fileName, filetype),{expiresIn:3600}
+            );
 
 
+        return new Response(JSON.stringify({url}), {status: 200})
+        }catch(error){
+            console.error(error);
+            return new Response(JSON.stringify({error: "Failed to upload file"}), {status: 500})
+        }
 
 
-
-    console.log(req);
-    const form = new IncomingForm({
-      uploadDir: path.join(process.cwd(), "uploads"),
-      keepExtensions: true,
-    });
-
-    const data: { files: any } = await new Promise((resolve, reject) => {
-      console.log("Parsing form...");
-      form.parse(req as any, (err: any, fields: any, files: any) => {
-        console.log("Form parsed successfully.");
-        if (err) reject(err);
-        resolve({ files });
-      });
-    });
-
-    Object.keys(data.files).forEach((key) => {
-      console.log(`Received file ${key}:`, data.files[key]);
-    });
-
-    return NextResponse.json({ message: "Successfully received file(s)" });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    
 }

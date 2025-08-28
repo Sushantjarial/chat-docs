@@ -70,6 +70,7 @@ export default function FileUploader({
 
   const filterAndConvert = (list: FileList | null) => {
     if (!list) return [];
+
     const arr = Array.from(list).filter((f) => {
       const lower = f.name.toLowerCase();
       return ACCEPT_EXT.some((ext) => lower.endsWith(ext));
@@ -90,10 +91,12 @@ export default function FileUploader({
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
+    console.log("Dropped files:", e.dataTransfer.files);
     handleFiles(e.dataTransfer.files);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Selected files:", e.target.files);
     handleFiles(e.target.files);
     if (inputRef.current) inputRef.current.value = "";
   };
