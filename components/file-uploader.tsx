@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
-
+import axios from "axios";
+import { file } from "better-auth";
 export type UploadedFile = {
   id: string;
   name: string;
@@ -79,11 +80,38 @@ export default function FileUploader({
   };
 
   const handleFiles = useCallback(
-    (fileList: FileList | null) => {
+
+   async (fileList: FileList | null) => {
       const converted = filterAndConvert(fileList);
+      if (converted.length + files.length > 8) {
+        alert("Too many files selected");
+        return;
+      }
       if (converted.length === 0) return;
       // mock upload: immediate success
-      onAddFiles(converted);
+      try{
+       const res = await axios.post("/api/upload", {
+         files : converted.map(f=>({ id: f.id, name: f.name, type: f.type , size: f.size}))
+       })
+       console.log("Upload success:", res.data);
+       await Promise.all(
+         converted.map(async (file) => {
+           const uploaded = res.data.links.find((uf: any) => uf.id === file.id);
+           if (uploaded) {
+             await axios.put(uploaded.url, file, {
+               headers: {
+                 "Content-Type": file.type,
+             },
+           });
+         }
+  
+
+       })     );
+           onAddFiles(converted);
+      }catch(error){
+        console.error("Upload failed:", error);
+      }
+
     },
     [onAddFiles]
   );

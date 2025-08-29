@@ -3,7 +3,7 @@ import { getSessionCookie } from "better-auth/cookies";
 
 export async function middleware(request: NextRequest) {
   const session = await getSessionCookie(request);
-
+console.log("Middleware session:", session);
   if (!session) {
     return NextResponse.redirect(new URL("/", request.url));
   }
