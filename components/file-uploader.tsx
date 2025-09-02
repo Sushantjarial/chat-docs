@@ -80,8 +80,7 @@ export default function FileUploader({
   };
 
   const handleFiles = useCallback(
-
-   async (fileList: FileList | null) => {
+    async (fileList: FileList | null) => {
       const converted = filterAndConvert(fileList);
       if (converted.length + files.length > 8) {
         alert("Too many files selected");
@@ -89,29 +88,35 @@ export default function FileUploader({
       }
       if (converted.length === 0) return;
       // mock upload: immediate success
-      try{
-       const res = await axios.post("/api/upload", {
-         files : converted.map(f=>({ id: f.id, name: f.name, type: f.type , size: f.size}))
-       })
-       console.log("Upload success:", res.data);
-       await Promise.all(
-         converted.map(async (file) => {
-           const uploaded = res.data.links.find((uf: any) => uf.id === file.id);
-           if (uploaded) {
-             await axios.put(uploaded.url, file, {
-               headers: {
-                 "Content-Type": file.type,
-             },
-           });
-         }
-  
+      try {
+        const res = await axios.post("/api/upload", {
+          files: converted.map((f) => ({
+            id: f.id,
+            name: f.name,
+            type: f.type,
+            size: f.size,
+          })),
+        });
+        console.log("Upload success:", res.data);
+        await Promise.all(
+          converted.map(async (file) => {
+            const uploaded = res.data.links.find(
+              (uf: any) => uf.id === file.id
+            );
+            if (uploaded) {
+              const res = await axios.put(uploaded.url, file, {
+                headers: {
+                  "Content-Type": file.type,
+                },
+              });
+              console.log(res)
 
-       })     );
-           onAddFiles(converted);
-      }catch(error){
+          } })
+        );
+        onAddFiles(converted);
+      } catch (error) {
         console.error("Upload failed:", error);
       }
-
     },
     [onAddFiles]
   );
