@@ -2,7 +2,7 @@
 
 import React, { useCallback, useRef, useState } from "react";
 import axios from "axios";
-import { file } from "better-auth";
+
 export type UploadedFile = {
   id: string;
   name: string;
@@ -50,28 +50,33 @@ export default function FileUploader({
       };
       onAddFiles([obj]);
       setLink("");
-      // auto-toggle newly added link into selection
+
       onToggleSelect(obj);
     } catch (e) {
-      // invalid URL - ignore or optionally show feedback
-      // For now, just ignore invalid input
+      console.error("Invalid URL:", link);
     }
   };
 
-  const toUploaded = (f: File, idx: number): UploadedFile => ({
-    id:
-      typeof crypto !== "undefined" &&
-      typeof (crypto as any).randomUUID === "function"
-        ? (crypto as any).randomUUID()
-        : `${Date.now()}-${idx}`,
-    name: f.name,
-    size: f.size,
-    type: f.type || "application/octet-stream",
+  const toUploaded = (
+    f: File,
+    idx: number
+  ): { meta: UploadedFile; file: File } => ({
+    meta: {
+      id:
+        typeof crypto !== "undefined" &&
+        typeof (crypto as any).randomUUID === "function"
+          ? (crypto as any).randomUUID()
+          : `${Date.now()}-${idx}`,
+      name: f.name,
+      size: f.size,
+      type: f.type || "application/octet-stream",
+    },
+    file: f,
   });
 
+  // Returns array of { meta, file }
   const filterAndConvert = (list: FileList | null) => {
     if (!list) return [];
-
     const arr = Array.from(list).filter((f) => {
       const lower = f.name.toLowerCase();
       return ACCEPT_EXT.some((ext) => lower.endsWith(ext));
@@ -81,55 +86,62 @@ export default function FileUploader({
 
   const handleFiles = useCallback(
     async (fileList: FileList | null) => {
-      const converted = filterAndConvert(fileList);
+      const converted = filterAndConvert(fileList); // [{ meta, file }]
       if (converted.length + files.length > 8) {
         alert("Too many files selected");
         return;
       }
       if (converted.length === 0) return;
-      // mock upload: immediate success
       try {
         const res = await axios.post("/api/upload", {
           files: converted.map((f) => ({
-            id: f.id,
-            name: f.name,
-            type: f.type,
-            size: f.size,
+            id: f.meta.id,
+            name: f.meta.name,
+            type: f.meta.type,
+            size: f.meta.size,
           })),
         });
-        console.log("Upload success:", res.data);
         await Promise.all(
-          converted.map(async (file) => {
+          converted.map(async ({ meta, file }) => {
             const uploaded = res.data.links.find(
-              (uf: any) => uf.id === file.id
+              (uf: any) => uf.id === meta.id
             );
             if (uploaded) {
-              const res = await axios.put(uploaded.url, file, {
+              // Use fetch to upload the actual file
+              const putRes = await fetch(uploaded.url, {
+                method: "PUT",
+                body: file,
                 headers: {
-                  "Content-Type": file.type,
+                  "Content-Type": meta.type,
                 },
               });
-              console.log(res)
-
-          } })
+              if (putRes.ok) {
+                axios.post("/api/complete", {
+                  file: meta,
+                  s3Key: uploaded.s3Key,
+                });
+              } else {
+                console.error("File upload failed:", meta.name, putRes.status);
+              }
+            }
+          })
         );
-        onAddFiles(converted);
+
+        onAddFiles(converted.map((f) => f.meta));
       } catch (error) {
         console.error("Upload failed:", error);
       }
     },
-    [onAddFiles]
+    [onAddFiles, files.length]
   );
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    console.log("Dropped files:", e.dataTransfer.files);
     handleFiles(e.dataTransfer.files);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("Selected files:", e.target.files);
     handleFiles(e.target.files);
     if (inputRef.current) inputRef.current.value = "";
   };
