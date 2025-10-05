@@ -7,7 +7,7 @@ const worker = new Worker(
   "dbQueue",
   async (job) => {
     try {
-      console.log(job.data);
+      console.log(job.data); 
       const file = await prisma.file.create({
         data: {
           id: job.data.file.id,

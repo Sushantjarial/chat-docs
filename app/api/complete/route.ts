@@ -15,10 +15,9 @@ export async function POST(req: NextRequest) {
     });
   }
   const { user } = sessionResult;
-  console.log("Auth session:", user);
+
 
   const { file, s3Key } = await req.json();
-
   uploadQueue.add(
     "processUpload",
     { file, userId: user.id, status: "pending", s3Key },
@@ -28,5 +27,6 @@ export async function POST(req: NextRequest) {
       backoff: { type: "exponential", delay: 5000 },
     }
   );
+  console.log("File upload job added to the queue");
   return new Response(JSON.stringify({ message: "File upload initiated" }));
 }
