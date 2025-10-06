@@ -4,6 +4,8 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { CharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { encoding_for_model } from "tiktoken";
 
 import dotenv from "dotenv";
 import path from "path";
@@ -14,10 +16,22 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// const textSplitter = new CharacterTextSplitter({
+//   chunkSize: 100, // or 2000 for embeddings
+//   chunkOverlap: 0,
+//   separators: ["\n", " ", ""], // fallback to splitting anywhere
+// });
 
-const textSplitter = new CharacterTextSplitter({
-  chunkSize: 1000,
-  chunkOverlap: 200,
+const enc = encoding_for_model("text-embedding-3-small");
+
+function countTokens(text) {
+  return enc.encode(text).length;
+}
+
+const textSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000, // max tokens per chunk
+  chunkOverlap: 200, // tokens to overlap between chunks
+  lengthFunction: countTokens, // use real token counts
 });
 
 const embeddings = new OpenAIEmbeddings({
@@ -181,10 +195,10 @@ async function processFileAndStore(fileBuffer, userId, s3Key) {
         docs = await loader.load();
         break;
       }
-      case "txt":
-      case "md": {
+
+      case "txt": {
         const { TextLoader } = await import(
-          "@langchain/community/document_loaders/fs/text"
+          "langchain/document_loaders/fs/text"
         );
         const loader = new TextLoader(new Blob([fileBuffer]));
         docs = await loader.load();
@@ -223,8 +237,24 @@ async function processFileAndStore(fileBuffer, userId, s3Key) {
         fileType: fileTypeDesc,
       };
     });
+
+    console.log(docs.map((d) => d.pageContent.length));
     const chunks = await textSplitter.splitDocuments(docs);
-    await vectorStore.addDocuments(chunks);
+
+    let batch = [];
+    let tokenCount = 0;
+    for (const chunk of chunks) {
+      const len = chunk.pageContent.length; // rough token estimate
+      if (tokenCount + len > 4000) {
+        await vectorStore.addDocuments(batch);
+        batch = [];
+        tokenCount = 0;
+      }
+      batch.push(chunk);
+      tokenCount += len;
+    }
+    if (batch.length > 0) await vectorStore.addDocuments(batch);
+
     const textLength = docs.reduce(
       (acc, d) => acc + (d.pageContent?.length || 0),
       0
