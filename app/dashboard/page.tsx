@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react";
 import FileUploader, { UploadedFile } from "@/components/file-uploader";
 import ChatPane, { ChatMessage } from "@/components/chat-pane";
 import DarkToggle from "@/components/dark-toggle";
+import axios from "axios";
 
 export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -32,16 +33,21 @@ export default function DashboardPage() {
         text: text.trim(),
         timestamp: new Date().toISOString(),
       };
-      setMessages((m) => [...m, userMsg]);
+       setMessages((m) => [...m, userMsg]);
+      const res= await axios.post('/api/query',{query:text})
+      console.log("Response from /api/query:", res);
+
+     const ans= res.data.response
+
 
       // Mock LLM response: small delay then echo plus optional file context
-      await new Promise((r) => setTimeout(r, 700));
+
       const assistantMsg: ChatMessage = {
         id: String(Date.now() + 1),
         role: "assistant",
         text: `${
           selectedFiles && selectedFiles.length > 0
-            ? `[Using ${selectedFiles.map((f) => f.name).join(", ")}]`
+            ? `[Using ${selectedFiles.map((f) => f.name).join(", ")} as context.] ${ans}`
             : "No files selected."
         }`,
         timestamp: new Date().toISOString(),

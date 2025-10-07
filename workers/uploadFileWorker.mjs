@@ -10,6 +10,7 @@ import { encoding_for_model } from "tiktoken";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { X } from "lucide-react";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
