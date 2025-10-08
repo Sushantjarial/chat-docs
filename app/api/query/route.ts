@@ -36,7 +36,7 @@ export async function POST( req: Request) {
 // };
 const similaritySearchResults = await vectorStore.similaritySearch(
   query,
-  2
+  3
   
 );
 console.log("Similarity Search Results:", similaritySearchResults,"hii");
@@ -47,9 +47,10 @@ for (const doc of similaritySearchResults) {
 }
 const response = await model.chat.completions.create({
 model: "gpt-3.5-turbo",
-messages:[
-    {role:"system",content:"You are a helpful assistant that helps people find information based on given context "  + similaritySearchResults.map((doc)=>doc.pageContent).join("\n")},
-    {role:"user",content:query},
+messages: [
+  { role: "system", content: "You are a helpful assistant that answers queries based on given context." },
+  { role: "assistant", content: similaritySearchResults.map(doc => doc.pageContent).join("\n") },
+  { role: "user", content: query },
 ]
 })
     const mockResponse = {
