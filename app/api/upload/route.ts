@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       status: 400,
     });
   }
-  if (files.some((f: any) => !f.name || !f.type)) {
+  if (files.some((f: any) => !f.fileName || !f.type)) {
     return new Response(JSON.stringify({ error: "Invalid file metadata" }), {
       status: 400,
     });
@@ -39,10 +39,10 @@ export async function POST(req: NextRequest) {
   try {
     const links = await Promise.all(
       files.map(async (file: any) => {
-        let { name, type, id } = file;
+        let { fileName, type, id } = file;
         const s3Key = `uploads/${user.id}/${Date.now()}-${Math.random()
           .toString(36)
-          .substring(2, 15)}-${name}`;
+          .substring(2, 15)}-${fileName}`;
 
         return {
           url: await getSignedUrl(r2Client, getCommandObject(s3Key, type), {

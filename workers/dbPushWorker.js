@@ -13,7 +13,7 @@ const worker = new Worker(
           id: job.data.file.id,
           userId: job.data.userId,
           s3Key: job.data.s3Key,
-          fileName: job.data.file.name,
+          fileName: job.data.file.fileName,
           size: job.data.file.size,
         },
       });

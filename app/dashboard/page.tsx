@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import FileUploader, { UploadedFile } from "@/components/file-uploader";
 import ChatPane, { ChatMessage } from "@/components/chat-pane";
 import DarkToggle from "@/components/dark-toggle";
@@ -10,6 +10,30 @@ export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<UploadedFile[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+useEffect(()=>{
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('/api/myDocs');
+      const data = response.data;
+      console.log("Fetched data from /api/myDocs:", data);
+      if (data && data.docs) {
+        const fetchedFiles = data.docs.map((doc: any) => ({
+          id: doc.id,
+          fileName: doc.fileName,
+          size: doc.size,
+          type: doc.type,
+          s3Key: doc.s3Key,
+        }));
+        setFiles(fetchedFiles);
+
+      }
+    } catch (error) {
+      console.error("Error fetching data from /api/myDocs:", error);
+    }
+  };
+  fetchData();
+}, []);
 
   const addFiles = useCallback(
     (newFiles: UploadedFile[]) => {
@@ -33,8 +57,19 @@ export default function DashboardPage() {
         text: text.trim(),
         timestamp: new Date().toISOString(),
       };
+      const s3Keys=selectedFiles.map(f=>f.s3Key).filter(f=>f!==undefined)
        setMessages((m) => [...m, userMsg]);
-      const res= await axios.post('/api/query',{query:text})
+       if(s3Keys.length===0){
+        const assistantMsg: ChatMessage = {
+          id: String(Date.now() + 1),
+          role: "assistant",
+          text: `No files selected. Please select files to provide context for your query.`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((m) => [...m, assistantMsg]);
+        return;
+       }
+      const res= await axios.post('/api/query',{query:text, s3Keys: s3Keys })
       console.log("Response from /api/query:", res);
 
      const ans= res.data.response
@@ -47,7 +82,7 @@ export default function DashboardPage() {
         role: "assistant",
         text: `${
           selectedFiles && selectedFiles.length > 0
-            ? `[Using ${selectedFiles.map((f) => f.name).join(", ")} as context.] ${ans}`
+            ? `[Using ${selectedFiles.map((f) => f.fileName).join(", ")} as context.] ${ans}`
             : "No files selected."
         }`,
         timestamp: new Date().toISOString(),

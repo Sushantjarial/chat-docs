@@ -5,10 +5,11 @@ import axios from "axios";
 
 export type UploadedFile = {
   id: string;
-  name: string;
+  fileName: string;
   size: number;
   type: string;
   url?: string;
+  s3Key?: string;
 };
 
 type Props = {
@@ -43,7 +44,7 @@ export default function FileUploader({
           typeof (crypto as any).randomUUID === "function"
             ? (crypto as any).randomUUID()
             : `${Date.now()}-link`,
-        name,
+        fileName: name,
         size: 0,
         type: "link",
         url: link.trim(),
@@ -67,7 +68,7 @@ export default function FileUploader({
         typeof (crypto as any).randomUUID === "function"
           ? (crypto as any).randomUUID()
           : `${Date.now()}-${idx}`,
-      name: f.name,
+      fileName: f.name,
       size: f.size,
       type: f.type || "application/octet-stream",
     },
@@ -87,16 +88,16 @@ export default function FileUploader({
   const handleFiles = useCallback(
     async (fileList: FileList | null) => {
       const converted = filterAndConvert(fileList); // [{ meta, file }]
-      if (converted.length + files.length > 8) {
-        alert("Too many files selected");
-        return;
-      }
+      // if (converted.length + files.length > 8) {
+      //   alert("Too many files selected");
+      //   return;
+      // }
       if (converted.length === 0) return;
       try {
         const res = await axios.post("/api/upload", {
           files: converted.map((f) => ({
             id: f.meta.id,
-            name: f.meta.name,
+            fileName: f.meta.fileName,
             type: f.meta.type,
             size: f.meta.size,
           })),
@@ -121,7 +122,7 @@ export default function FileUploader({
                   s3Key: uploaded.s3Key,
                 });
               } else {
-                console.error("File upload failed:", meta.name, putRes.status);
+                console.error("File upload failed:", meta.fileName, putRes.status);
               }
             }
           })
@@ -237,7 +238,7 @@ export default function FileUploader({
                   }`}
                 >
                   <div className="truncate text-sm text-foreground">
-                    {f.name}
+                    {f.fileName}
                   </div>
                   <div className="ml-3 text-xs text-muted-foreground">
                     {f.type === "link"

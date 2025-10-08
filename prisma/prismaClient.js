@@ -1,5 +1,5 @@
-// prismaClient.js
+import { PrismaClient } from "@/lib/generated/prisma";
 
 const prisma = new PrismaClient();
 
-module.exports = prisma;
+export default prisma;
