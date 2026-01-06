@@ -1,8 +1,8 @@
 import { Worker } from "bullmq";
-
+import 'dotenv/config';
 import { PrismaClient } from "../lib/generated/prisma/index.js";
 const prisma = new PrismaClient();
-
+console.log(process.env.DATABASE_URL);
 const worker = new Worker(
   "dbQueue",
   async (job) => {

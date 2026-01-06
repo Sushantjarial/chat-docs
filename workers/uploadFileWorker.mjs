@@ -7,16 +7,15 @@ import { CharacterTextSplitter } from "langchain/text_splitter";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { encoding_for_model } from "tiktoken";
 
-import dotenv from "dotenv";
+import  "dotenv/config";
 import path from "path";
 import { fileURLToPath } from "url";
 import { X } from "lucide-react";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 // const textSplitter = new CharacterTextSplitter({
 //   chunkSize: 100, // or 2000 for embeddings
 //   chunkOverlap: 0,

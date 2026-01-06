@@ -3,9 +3,12 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { OpenAI } from "openai";
 
+
+let count =0;
+
 const embeddings = new OpenAIEmbeddings({
   openAIApiKey: process.env.OPENAI_API_KEY,
-  model: "text-embedding-ada-002",
+  model: "text-embedding-3-small",
 });
 const model = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,12 +20,15 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
 });
 
 export async function POST(req: Request) {
+  count++;
+  console.log(count)
   const sessionResult = await auth.api.getSession({ headers: req.headers });
   if (!sessionResult) {
     return new Response(JSON.stringify({ error: "No session found" }), {
       status: 401,
     });
   }
+  
   const { user } = sessionResult;
   const body = await req.json();
   const { query, s3Keys } = body;
@@ -66,12 +72,12 @@ const limitedResults = similaritySearchResults.slice(0, 15);
     console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
   }
   const response = await model.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4.1",
     messages: [
       {
         role: "system",
         content:
-          "You are a helpful assistant that answers queries based on given context.",
+          "You answer the user’s query using only the information provided in the context.If the context does not contain the answer, say that the information is not present.Do not invent or guess. Do not rely on prior knowledge.Respond clearly, concisely, and in plain language.",
       },
       {
         role: "assistant",
