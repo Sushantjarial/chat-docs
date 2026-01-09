@@ -122,7 +122,11 @@ export default function FileUploader({
                   s3Key: uploaded.s3Key,
                 });
               } else {
-                console.error("File upload failed:", meta.fileName, putRes.status);
+                console.error(
+                  "File upload failed:",
+                  meta.fileName,
+                  putRes.status
+                );
               }
             }
           })
@@ -148,7 +152,7 @@ export default function FileUploader({
   };
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -156,17 +160,34 @@ export default function FileUploader({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
-        className={`rounded-md border-2 px-3 py-6 text-center transition ${
-          dragOver
-            ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-900/40"
-            : "border-dashed border-gray-300 bg-white dark:bg-card"
-        }`}
+        style={{
+          borderRadius: "16px",
+          padding: "24px 16px",
+          textAlign: "center",
+          transition: "all 0.3s ease",
+          background: dragOver
+            ? "rgba(59, 130, 246, 0.15)"
+            : "rgba(255, 255, 255, 0.04)",
+          border: dragOver
+            ? "2px solid rgba(59, 130, 246, 0.5)"
+            : "2px dashed rgba(255, 255, 255, 0.15)",
+          cursor: "pointer",
+        }}
       >
-        <div className="mx-auto max-w-xs">
-          <div className="mb-2 text-sm font-medium text-foreground">
+        <div style={{ maxWidth: "280px", margin: "0 auto" }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "#f8fafc",
+            }}
+          >
             Upload documents
           </div>
-          <p className="mb-3 text-xs text-muted-foreground">
+          <p
+            style={{ marginBottom: "12px", fontSize: "12px", color: "#cbd5e1" }}
+          >
             PDF, TXT, DOCX — drag & drop or choose files
           </p>
 
@@ -177,11 +198,28 @@ export default function FileUploader({
               accept={acceptAttr}
               multiple
               onChange={onFileChange}
-              className="hidden"
+              style={{ display: "none" }}
             />
             <button
               onClick={() => inputRef.current?.click()}
-              className="rounded-md border px-3 py-1 text-sm"
+              style={{
+                borderRadius: "8px",
+                padding: "6px 12px",
+                fontSize: "13px",
+                background: "rgba(59, 130, 246, 0.3)",
+                border: "1px solid rgba(59, 130, 246, 0.4)",
+                color: "#93c5fd",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseOver={(e) => {
+                (e.target as HTMLButtonElement).style.background =
+                  "rgba(59, 130, 246, 0.45)";
+              }}
+              onMouseOut={(e) => {
+                (e.target as HTMLButtonElement).style.background =
+                  "rgba(59, 130, 246, 0.3)";
+              }}
               type="button"
             >
               Choose files
@@ -190,20 +228,60 @@ export default function FileUploader({
         </div>
       </div>
       {/* Link input to add external URLs as lightweight files */}
-      <div className="rounded-md border bg-card p-3">
-        <div className="mb-2 text-sm font-semibold text-foreground">
+      <div
+        style={{
+          borderRadius: "16px",
+          padding: "16px",
+          background: "rgba(255, 255, 255, 0.04)",
+          border: "none",
+        }}
+      >
+        <div
+          style={{
+            marginBottom: "12px",
+            fontSize: "13px",
+            fontWeight: 600,
+            color: "#f8fafc",
+          }}
+        >
           Add a link
         </div>
-        <div className="flex gap-2">
+        <div style={{ display: "flex", gap: "8px" }}>
           <input
             value={link}
             onChange={(e) => setLink(e.target.value)}
             placeholder="https://example.com/article"
-            className="flex-1 rounded-md border px-3 py-2 text-sm outline-none bg-background text-foreground"
+            style={{
+              flex: 1,
+              borderRadius: "8px",
+              padding: "8px 12px",
+              fontSize: "13px",
+              outline: "none",
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              color: "#f8fafc",
+            }}
           />
           <button
             onClick={addLink}
-            className="rounded-md bg-indigo-600 px-3 py-2 text-sm text-white"
+            style={{
+              borderRadius: "8px",
+              padding: "8px 12px",
+              fontSize: "13px",
+              background: "rgba(59, 130, 246, 0.4)",
+              border: "1px solid rgba(59, 130, 246, 0.5)",
+              color: "#93c5fd",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseOver={(e) => {
+              (e.target as HTMLButtonElement).style.background =
+                "rgba(59, 130, 246, 0.55)";
+            }}
+            onMouseOut={(e) => {
+              (e.target as HTMLButtonElement).style.background =
+                "rgba(59, 130, 246, 0.4)";
+            }}
             type="button"
           >
             Add
@@ -211,36 +289,92 @@ export default function FileUploader({
         </div>
       </div>
 
-      <div className="rounded-md border bg-card p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="text-sm font-semibold text-foreground">
+      <div
+        style={{
+          borderRadius: "16px",
+          padding: "16px",
+          background: "rgba(255, 255, 255, 0.04)",
+          border: "none",
+        }}
+      >
+        <div
+          style={{
+            marginBottom: "12px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "#f8fafc" }}>
             Uploaded files
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div style={{ fontSize: "12px", color: "#cbd5e1" }}>
             {files.length} files
           </div>
         </div>
 
         {files.length === 0 ? (
-          <div className="text-xs text-muted-foreground">No files uploaded</div>
+          <div style={{ fontSize: "12px", color: "#cbd5e1" }}>
+            No files uploaded
+          </div>
         ) : (
-          <ul className="max-h-56 overflow-auto space-y-1">
+          <ul
+            style={{
+              maxHeight: "224px",
+              overflow: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+            }}
+          >
             {files.map((f) => {
               const isSelected = selectedFiles.some((s) => s.id === f.id);
               return (
                 <li
                   key={f.id}
                   onClick={() => onToggleSelect(f)}
-                  className={`flex cursor-pointer items-center justify-between rounded px-3 py-2 transition hover:bg-accent/5 dark:hover:bg-accent/20 ${
-                    isSelected
-                      ? "bg-indigo-50 dark:bg-indigo-800 border-l-4 border-indigo-400"
-                      : ""
-                  }`}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    background: isSelected
+                      ? "rgba(59, 130, 246, 0.2)"
+                      : "transparent",
+                    borderLeft: isSelected
+                      ? "3px solid rgba(59, 130, 246, 0.6)"
+                      : "none",
+                  }}
+                  onMouseOver={(e) => {
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(59, 130, 246, 0.1)";
+                  }}
+                  onMouseOut={(e) => {
+                    (e.currentTarget as HTMLElement).style.background =
+                      isSelected ? "rgba(59, 130, 246, 0.2)" : "transparent";
+                  }}
                 >
-                  <div className="truncate text-sm text-foreground">
+                  <div
+                    style={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      fontSize: "13px",
+                      color: "#f8fafc",
+                    }}
+                  >
                     {f.fileName}
                   </div>
-                  <div className="ml-3 text-xs text-muted-foreground">
+                  <div
+                    style={{
+                      marginLeft: "12px",
+                      fontSize: "12px",
+                      color: "#cbd5e1",
+                      flexShrink: 0,
+                    }}
+                  >
                     {f.type === "link"
                       ? "link"
                       : `${(f.size / 1024).toFixed(0)} KB`}
